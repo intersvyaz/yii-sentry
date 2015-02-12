@@ -8,8 +8,6 @@ use Yii;
 
 class SentryLogRoute extends CLogRoute
 {
-	public $enabled = true;
-
 	/**
 	 * @var string Component ID of the sentry client that should be used to send the logs
 	 */
@@ -32,7 +30,7 @@ class SentryLogRoute extends CLogRoute
 	 */
 	protected function processLogs($logs)
 	{
-		if (!$this->enabled && count($logs) == 0) {
+		if (count($logs) == 0) {
 			return;
 		}
 
