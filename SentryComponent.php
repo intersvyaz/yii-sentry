@@ -87,6 +87,51 @@ class SentryComponent extends CApplicationComponent
 	}
 
 	/**
+	 * Register and configure Raven js.
+	 * @param array|null $options If null, then will be used $this->ravenJsOptions.
+	 * @param array|null $plugins If null, then will be used $this->ravenJsPlugins.
+	 * @param array|null $context If null, then will be used $this->getUserContext().
+	 * @return bool
+	 * @throws CException
+	 */
+	public function registerRavenJs(array $options = null, array $plugins = null, array $context = null)
+	{
+		/** @var CAssetManager $assetManager */
+		$assetManager = $this->getComponent('assetManager');
+		/** @var CClientScript $clientScript */
+		$clientScript = $this->getComponent('clientScript');
+
+		if (!$assetManager || !$clientScript) {
+			return false;
+		}
+
+		$jsOptions = $options !== null ? $options : $this->ravenJsOptions;
+		$jsPlugins = $plugins !== null ? $plugins : $this->ravenJsPlugins;
+		$jsContext = $context !== null ? $context : $this->getUserContext();
+
+		$assetUrl = $assetManager->publish(__DIR__ . '/assets');
+		$clientScript
+			->registerScriptFile($assetUrl . '/raven.min.js', CClientScript::POS_HEAD)
+			->registerScript(
+				'raven-js1',
+				'Raven.config(\'' . $this->getJsDsn() . '\', ' . CJavaScript::encode($jsOptions) . ').install()',
+				CClientScript::POS_BEGIN
+			);
+
+		if ($jsContext) {
+			$clientScript->registerScript(
+				'raven-js2',
+				'Raven.setUserContext(' . CJavaScript::encode($jsContext) . ');',
+				CClientScript::POS_BEGIN
+			);
+		}
+
+		foreach ($jsPlugins as $plugin) {
+			$clientScript->registerScriptFile($assetUrl . '/plugins/' . $plugin . '.js', CClientScript::POS_HEAD);
+		}
+	}
+
+	/**
 	 * Initialize raven client.
 	 */
 	protected function registerRaven()
@@ -95,44 +140,6 @@ class SentryComponent extends CApplicationComponent
 
 		if ($userContext = $this->getUserContext()) {
 			$this->raven->set_user_data($userContext['id'], '', array('name' => $userContext['name']));
-		}
-	}
-
-	/**
-	 * Register and configure Raven js.
-	 * @return bool
-	 * @throws CException
-	 */
-	protected function registerRavenJs()
-	{
-		/** @var CAssetManager $assetManager */
-		$assetManager = $this->getComponent('assetManager');
-		/** @var CClientScript $clientScript */
-		$clientScript = $this->getComponent('clientScript');
-		if (!$assetManager || !$clientScript) {
-			return false;
-		}
-
-
-		$assetUrl = $assetManager->publish(__DIR__ . '/assets');
-		$clientScript
-			->registerScriptFile($assetUrl . '/raven.js', CClientScript::POS_HEAD)
-			->registerScript(
-				'raven-js1',
-				'Raven.config(\'' . $this->getJsDsn() . '\', ' . CJavaScript::encode($this->ravenJsOptions) . ').install()',
-				CClientScript::POS_BEGIN
-			);
-
-		if ($userContext = $this->getUserContext()) {
-			$clientScript->registerScript(
-				'raven-js2',
-				'Raven.setUserContext(' . CJavaScript::encode($userContext) . ');',
-				CClientScript::POS_BEGIN
-			);
-		}
-
-		foreach ($this->ravenJsPlugins as $plugin) {
-			$clientScript->registerScriptFile($assetUrl . '/plugins/' . $plugin . '.js', CClientScript::POS_HEAD);
 		}
 	}
 
