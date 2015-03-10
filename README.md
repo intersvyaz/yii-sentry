@@ -7,7 +7,9 @@ Sentry component and log route for Yii framework.
 * [Sentry Account](https://www.getsentry.com/) or Your own [Sentry server](http://sentry.readthedocs.org/en/latest/quickstart/)
 
 ### Download
+```
 composer require intersvyaz/yii-sentry
+```
 
 ### Configure
 main.php:
