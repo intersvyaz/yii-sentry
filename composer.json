@@ -4,7 +4,7 @@
     "minimum-stability": "stable",
     "license": "MIT",
     "require": {
-        "php": ">=5.5.0",
+        "php": ">=5.4.0",
         "yiisoft/yii" : "~1.1.15",
         "raven/raven": "~0.10"
     },
