@@ -6,7 +6,7 @@
     "require": {
         "php": ">=5.5.0",
         "yiisoft/yii" : "~1.1.15",
-        "raven/raven": "~0.10"
+        "sentry/sentry": "~0.10"
     },
     "require-dev":{
         "phpunit/phpunit": "~4.5"
