@@ -25,7 +25,7 @@ class SentryComponent extends CApplicationComponent
 	 * @var array Raven_Client options.
 	 * @see https://github.com/getsentry/raven-php#configuration
 	 */
-	public $options = array();
+	public $options = [];
 
 	/**
 	 * Publish, register and configure Raven-JS.
@@ -39,14 +39,14 @@ class SentryComponent extends CApplicationComponent
 	 * @var array
 	 * @see https://raven-js.readthedocs.org/en/latest/config/index.html#optional-settings
 	 */
-	public $ravenJsOptions = array();
+	public $ravenJsOptions = [];
 
 	/**
 	 * Raven-JS plugins.
 	 * @var array
 	 * @see https://raven-js.readthedocs.org/en/latest/plugins/index.html
 	 */
-	public $ravenJsPlugins = array();
+	public $ravenJsPlugins = [];
 
 	/**
 	 * Initialize Raven_ErrorHandler.
@@ -139,7 +139,7 @@ class SentryComponent extends CApplicationComponent
 		$this->raven = new Raven_Client($this->dsn, $this->options);
 
 		if ($userContext = $this->getUserContext()) {
-			$this->raven->set_user_data($userContext['id'], '', array('name' => $userContext['name']));
+			$this->raven->user_context($userContext);
 		}
 	}
 
@@ -161,10 +161,10 @@ class SentryComponent extends CApplicationComponent
 		/** @var CWebUser $user */
 		$user = $this->getComponent('user');
 		if ($user && !$user->isGuest) {
-			return array(
+			return [
 				'id' => $user->getId(),
 				'name' => strtoupper($user->getName()),
-			);
+			];
 		}
 		return null;
 	}
