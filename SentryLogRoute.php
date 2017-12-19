@@ -19,11 +19,24 @@ class SentryLogRoute extends CLogRoute
 	 */
 	public $tracePattern = '/#(?<number>\d+) (?<file>[^(]+)\((?<line>\d+)\): (?<cls>[^-]+)(->|::)(?<func>[^\(]+)/m';
 
+	public $except = [];
+
 	/**
 	 * Raven_Client instance from SentryComponent->getRaven();
 	 * @var Raven_Client
 	 */
 	protected $raven;
+
+	public function init() {
+		parent::init();
+
+		if (is_string($this->except)) {
+			$this->except = preg_split('/[\s,]+/',strtolower($this->except),-1,PREG_SPLIT_NO_EMPTY);
+		} else {
+			new \CException('Bad except value');
+		}
+	}
+
 
 	/**
 	 * @inheritdoc
@@ -41,20 +54,24 @@ class SentryLogRoute extends CLogRoute
 		foreach ($logs as $log) {
 			list($message, $level, $category, $timestamp) = $log;
 
-			$title = preg_replace('#Stack trace:.+#s', '', $message); // remove stack trace from title
-			$raven->captureMessage(
-				$title,
-				array(
-					'extra' => array(
-						'category' => $category,
+			if (!in_array(strtolower($category), $this->except)) {
+
+				$title = preg_replace('#Stack trace:.+#s', '', $message); // remove stack trace from title
+				$raven->captureMessage(
+					$title,
+					array(
+						'extra' => array(
+							'category' => $category,
+						),
 					),
-				),
-				array(
-					'level' => $level,
-					'timestamp' => $timestamp,
-				),
-				$this->getStackTrace($message)
-			);
+					array(
+						'level' => $level,
+						'timestamp' => $timestamp,
+					),
+					$this->getStackTrace($message)
+				);
+
+			}
 		}
 	}
 
