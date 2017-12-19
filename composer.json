@@ -6,7 +6,8 @@
     "require": {
         "php": ">=5.4.0",
         "yiisoft/yii" : "~1.1.15",
-        "raven/raven": "~0.10"
+        "bower-asset/raven-js": "~1.3",
+        "sentry/sentry": "^1.8"
     },
     "require-dev":{
         "phpunit/phpunit": "~4.5"

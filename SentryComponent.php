@@ -139,7 +139,7 @@ class SentryComponent extends CApplicationComponent
 		$this->raven = new Raven_Client($this->dsn, $this->options);
 
 		if ($userContext = $this->getUserContext()) {
-			$this->raven->set_user_data($userContext['id'], '', array('name' => $userContext['name']));
+			$this->raven->user_context($userContext);
 		}
 	}
 
