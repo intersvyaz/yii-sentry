@@ -1,5 +1,5 @@
 {
-    "name": "intersvyaz/yii-sentry",
+    "name": "skillshare/yii-sentry",
     "description": "Sentry component and LogRoute for Yii1",
     "minimum-stability": "dev",
     "license": "MIT",
