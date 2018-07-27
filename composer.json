@@ -1,7 +1,7 @@
 {
     "name": "intersvyaz/yii-sentry",
     "description": "Sentry component and LogRoute for Yii1",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "license": "MIT",
     "require": {
         "php": ">=5.5.0",
