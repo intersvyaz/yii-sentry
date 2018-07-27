@@ -1,5 +1,5 @@
 <?php
-namespace Intersvyaz\YiiSentry;
+namespace Skillshare\YiiSentry;
 
 use CApplicationComponent;
 use CAssetManager;
