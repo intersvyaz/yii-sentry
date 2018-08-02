@@ -3,15 +3,8 @@
     "description": "Sentry component and LogRoute for Yii1",
     "minimum-stability": "dev",
     "license": "MIT",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/yiisoft/yii"
-        }
-    ],
     "require": {
         "php": ">=5.5.0",
-        "yiisoft/yii": "dev-master#aebaec23f8c0c1f16b0b8f0dac6012d0d40167c1",
         "sentry/sentry": "^1.8"
     },
     "require-dev":{
