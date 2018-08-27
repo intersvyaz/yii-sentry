@@ -6,8 +6,8 @@
     "require": {
         "php": ">=5.5.0",
         "yiisoft/yii" : "~1.1.15",
-        "bower-asset/raven-js": "~1.3",
-        "sentry/sentry": "^1.8"
+        "sentry/sentry": "^1.8",
+        "bower-asset/raven-js": "^3.26"
     },
     "require-dev":{
         "phpunit/phpunit": "~4.5"
@@ -15,5 +15,11 @@
     "autoload": {
         "psr-4": {"Intersvyaz\\YiiSentry\\": ""}
     },
-    "authors" : []
+    "authors" : [],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ]
 }
