@@ -42,6 +42,9 @@ class SentryLogRoute extends CLogRoute
 			list($message, $level, $category, $timestamp) = $log;
 
 			$title = preg_replace('#Stack trace:.+#s', '', $message); // remove stack trace from title
+			// ensure %'s in messages aren't interpreted as replacement
+			// characters by the vsprintf inside raven
+			$title = str_replace('%', '%%', $title);
 			$raven->captureMessage(
 				$title,
 				array(
