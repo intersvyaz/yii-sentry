@@ -3,7 +3,10 @@ namespace Skillshare\YiiSentry;
 
 use CLogger;
 use CLogRoute;
-use Raven_Client;
+use Sentry\ClientInterface;
+use Sentry\SentrySdk;
+use Sentry\Severity;
+use Sentry\State\Scope;
 use Yii;
 
 class SentryLogRoute extends CLogRoute
@@ -21,7 +24,7 @@ class SentryLogRoute extends CLogRoute
 
 	/**
 	 * Raven_Client instance from SentryComponent->getRaven();
-	 * @var Raven_Client
+	 * @var ClientInterface
 	 */
 	protected $raven;
 
@@ -59,27 +62,22 @@ class SentryLogRoute extends CLogRoute
 			return;
 		}
 
-		foreach ($logs as $log) {
-			list($message, $level, $category, $timestamp) = $log;
+		SentrySdk::getCurrentHub()->withScope(function (Scope $scope) use ($raven, $logs) {
+			foreach ($logs as $log) {
+				[$message, $level, $category, $timestamp] = $log;
 
-			$title = preg_replace('#Stack trace:.+#s', '', $message); // remove stack trace from title
-			// ensure %'s in messages aren't interpreted as replacement
-			// characters by the vsprintf inside raven
-			$title = str_replace('%', '%%', $title);
-			$raven->captureMessage(
-				$title,
-				array(
-					'extra' => array(
-						'category' => $category,
-					),
-				),
-				array(
-					'level' => $level,
-					'timestamp' => $timestamp,
-				),
-				$this->getStackTrace($message)
-			);
-		}
+				$title = preg_replace('#Stack trace:.+#s', '', $message); // remove stack trace from title
+				// ensure %'s in messages aren't interpreted as replacement
+				// characters by the vsprintf inside raven
+				$title = str_replace('%', '%%', $title);
+
+				$scope->setExtras([
+					'category'  => $category,
+					'timestamp' => $timestamp, // TODO: I dont know if this has en effect
+				]);
+				$raven->captureMessage($title, self::getSeverityFromLogLevel($level), $scope);
+			}
+		});
 	}
 
 	/**
@@ -113,7 +111,8 @@ class SentryLogRoute extends CLogRoute
 
 	/**
 	 * Return Raven_Client instance or false if error.
-	 * @return Raven_Client|bool
+	 *
+	 * @return ClientInterface|bool
 	 */
 	protected function getRaven()
 	{
