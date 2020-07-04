@@ -9,8 +9,11 @@ use CJavaScript;
 use CWebApplication;
 use CWebUser;
 use IApplicationComponent;
-use Raven_Client;
-use Raven_ErrorHandler;
+use Sentry\ClientBuilder;
+use Sentry\ClientInterface;
+use Sentry\ErrorHandler;
+use Sentry\SentrySdk;
+use Sentry\State\Scope;
 use Yii;
 
 class SentryComponent extends CApplicationComponent
@@ -55,7 +58,7 @@ class SentryComponent extends CApplicationComponent
 	public $useRavenErrorHandler = false;
 
 	/**
-	 * @var Raven_Client instance.
+	 * @var ClientInterface instance.
 	 */
 	protected $raven;
 
@@ -75,7 +78,7 @@ class SentryComponent extends CApplicationComponent
 
 	/**
 	 * Get Raven_Client instance.
-	 * @return Raven_Client
+	 * @return ClientInterface
 	 */
 	public function getRaven()
 	{
@@ -136,11 +139,15 @@ class SentryComponent extends CApplicationComponent
 	 */
 	protected function registerRaven()
 	{
-		$this->raven = new Raven_Client($this->dsn, $this->options);
+		$this->raven = ClientBuilder::create($this->options)->getClient();
+		SentrySdk::getCurrentHub()->bindClient($this->raven);
 
-		if ($userContext = $this->getUserContext()) {
-			$this->raven->user_context($userContext);
-		}
+		$userContext = $this->getUserContext();
+		SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($userContext) {
+			if ($userContext) {
+				$scope->setUser($userContext, true);
+			}
+		});
 	}
 
 	/**
