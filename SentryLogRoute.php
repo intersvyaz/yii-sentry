@@ -25,6 +25,27 @@ class SentryLogRoute extends CLogRoute
 	 */
 	protected $raven;
 
+	public static function getSeverityFromLogLevel(string $level): Severity
+	{
+		$severityLevels = [
+			CLogger::LEVEL_PROFILE => Severity::debug(),
+			CLogger::LEVEL_TRACE   => Severity::debug(),
+			'debug'                => Severity::debug(),
+			CLogger::LEVEL_INFO    => Severity::info(),
+			CLogger::LEVEL_WARNING => Severity::warning(),
+			'warn'                 => Severity::warning(),
+			CLogger::LEVEL_ERROR   => Severity::error(),
+			'fatal'                => Severity::fatal(),
+		];
+
+		$level = strtolower($level);
+		if (array_key_exists($level, $severityLevels)) {
+			return $severityLevels[$level];
+		}
+
+		return Severity::error();
+	}
+
 	/**
 	 * @inheritdoc
 	 */
