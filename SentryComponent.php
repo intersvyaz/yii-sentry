@@ -195,10 +195,9 @@ class SentryComponent extends CApplicationComponent
 	{
 		$raven = $this->getRaven();
 		if ($raven) {
-			$handler = new Raven_ErrorHandler($raven);
-			$handler->registerExceptionHandler();
-			$handler->registerErrorHandler();
-			$handler->registerShutdownFunction();
+			ErrorHandler::registerOnceExceptionHandler();
+			ErrorHandler::registerOnceErrorHandler();
+			ErrorHandler::registerOnceFatalErrorHandler();
 
 			return true;
 		}
