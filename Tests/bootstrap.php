@@ -18,4 +18,5 @@ $config = [
     ],
 ];
 
+Yii::$enableIncludePath = false;
 Yii::createWebApplication($config);

@@ -1,17 +1,24 @@
 {
     "name": "skillshare/yii-sentry",
     "description": "Sentry component and LogRoute for Yii1",
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "license": "MIT",
     "require": {
-        "php": ">=5.5.0",
-        "sentry/sentry": "^1.8"
+        "php": ">=7.4.0",
+        "yiisoft/yii": "^1.1",
+        "sentry/sdk": "^2.1"
     },
     "require-dev":{
-        "phpunit/phpunit": "~4.5"
+        "phpunit/phpunit": "^8",
+        "mockery/mockery": "^1.4"
     },
     "autoload": {
         "psr-4": {"Skillshare\\YiiSentry\\": ""}
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Skillshare\\YiiSentry\\Test\\": "Tests/Unit"
+        }
     },
     "authors" : []
 }
