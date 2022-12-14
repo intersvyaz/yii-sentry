@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <phpunit
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/8.5/phpunit.xsd"
+        xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
         bootstrap="Tests/bootstrap.php"
         executionOrder="depends,defects"
         forceCoversAnnotation="true"
@@ -16,10 +16,10 @@
         </testsuite>
     </testsuites>
 
-    <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
+    <coverage processUncoveredFiles="true">
+        <include>
             <file>./SentryComponent.php</file>
             <file>./SentryLogRoute.php</file>
-        </whitelist>
-    </filter>
+        </include>
+    </coverage>
 </phpunit>

@@ -22,50 +22,48 @@ class SentryComponent extends CApplicationComponent
 	 * @var string Sentry DSN.
 	 * @see https://github.com/getsentry/raven-php#configuration
 	 */
-	public $dsn;
+	public string $dsn = '';
 
 	/**
-	 * @var array Raven_Client options.
+	 * @var mixed[] Raven_Client options.
 	 * @see https://github.com/getsentry/raven-php#configuration
 	 */
-	public $options = array();
+	public array $options = [];
 
 	/**
 	 * Publish, register and configure Raven-JS.
 	 * @see https://raven-js.readthedocs.org/
-	 * @var bool
 	 */
-	public $useRavenJs = false;
+	public bool $useRavenJs = false;
 
 	/**
 	 * Raven-JS configuration options.
-	 * @var array
+	 * @var mixed[]
 	 * @see https://raven-js.readthedocs.org/en/latest/config/index.html#optional-settings
 	 */
-	public $ravenJsOptions = array();
+	public array $ravenJsOptions = [];
 
 	/**
 	 * Raven-JS plugins.
-	 * @var array
+	 * @var mixed[]
 	 * @see https://raven-js.readthedocs.org/en/latest/plugins/index.html
 	 */
-	public $ravenJsPlugins = array();
+	public array $ravenJsPlugins = [];
 
 	/**
 	 * Initialize Raven_ErrorHandler.
-	 * @var bool
 	 */
-	public $useRavenErrorHandler = false;
+	public bool $useRavenErrorHandler = false;
 
 	/**
-	 * @var ClientInterface instance.
+	 * @var ClientInterface|null instance.
 	 */
-	protected $raven;
+	protected ?ClientInterface $raven = null;
 
 	/**
 	 * @inheritdoc
 	 */
-	public function init()
+	public function init(): void
 	{
 		parent::init();
 		if ($this->useRavenJs) {
@@ -78,39 +76,38 @@ class SentryComponent extends CApplicationComponent
 
 	/**
 	 * Get Raven_Client instance.
-	 * @return ClientInterface
 	 */
-	public function getRaven()
+	public function getRaven(): ClientInterface
 	{
 		if (!isset($this->raven)) {
 			$this->registerRaven();
 		}
 
+        /** @var ClientInterface */
 		return $this->raven;
 	}
 
 	/**
 	 * Register and configure Raven js.
-	 * @param array|null $options If null, then will be used $this->ravenJsOptions.
-	 * @param array|null $plugins If null, then will be used $this->ravenJsPlugins.
-	 * @param array|null $context If null, then will be used $this->getUserContext().
-	 * @return bool
+	 * @param mixed[]|null $options If null, then will be used $this->ravenJsOptions.
+	 * @param mixed[]|null $plugins If null, then will be used $this->ravenJsPlugins.
+	 * @param mixed[]|null $context If null, then will be used $this->getUserContext().
 	 * @throws CException
 	 */
-	public function registerRavenJs(array $options = null, array $plugins = null, array $context = null)
+	public function registerRavenJs(?array $options = null, ?array $plugins = null, ?array $context = null): bool
 	{
-		/** @var CAssetManager $assetManager */
+		/** @var CAssetManager|null $assetManager */
 		$assetManager = $this->getComponent('assetManager');
-		/** @var CClientScript $clientScript */
+		/** @var CClientScript|null $clientScript */
 		$clientScript = $this->getComponent('clientScript');
 
 		if (!$assetManager || !$clientScript) {
 			return false;
 		}
 
-		$jsOptions = $options !== null ? $options : $this->ravenJsOptions;
-		$jsPlugins = $plugins !== null ? $plugins : $this->ravenJsPlugins;
-		$jsContext = $context !== null ? $context : $this->getUserContext();
+		$jsOptions = $options ?? $this->ravenJsOptions;
+		$jsPlugins = $plugins ?? $this->ravenJsPlugins;
+		$jsContext = $context ?? $this->getUserContext();
 
 		$assetUrl = $assetManager->publish(__DIR__ . '/assets');
 		$clientScript
@@ -132,12 +129,14 @@ class SentryComponent extends CApplicationComponent
 		foreach ($jsPlugins as $plugin) {
 			$clientScript->registerScriptFile($assetUrl . '/plugins/' . $plugin . '.js', CClientScript::POS_HEAD);
 		}
+
+		return true;
 	}
 
 	/**
 	 * Initialize raven client.
 	 */
-	protected function registerRaven()
+	protected function registerRaven(): void
 	{
 		$this->raven = ClientBuilder::create($this->options)->getClient();
 		SentrySdk::getCurrentHub()->bindClient($this->raven);
@@ -145,29 +144,28 @@ class SentryComponent extends CApplicationComponent
 		$userContext = $this->getUserContext();
 		SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($userContext) {
 			if ($userContext) {
-				$scope->setUser($userContext, true);
+				$scope->setUser($userContext);
 			}
 		});
 	}
 
 	/**
 	 * Return Dsn without security token.
-	 * @return string
 	 */
-	protected function getJsDsn()
+	protected function getJsDsn(): string
 	{
-		return preg_replace('#:\w+@#', '@', $this->dsn);
+		return (string) preg_replace('#:\w+@#', '@', $this->dsn);
 	}
 
 	/**
 	 * Get get context (id, name).
-	 * @return array|null
+	 * @return array{id: mixed, name: string}|null
 	 */
-	protected function getUserContext()
+	protected function getUserContext(): ?array
 	{
-		/** @var CWebUser $user */
+		/** @var CWebUser|null $user */
 		$user = $this->getComponent('user');
-		if ($user && !$user->isGuest) {
+		if ($user && (!property_exists($user, 'isGuest') || !$user->isGuest)) {
 			return array(
 				'id' => $user->getId(),
 				'name' => strtoupper($user->getName()),
@@ -178,16 +176,19 @@ class SentryComponent extends CApplicationComponent
 
 	/**
 	 * Get Yii component if exists and available.
-	 * @param string $component
-	 * @return IApplicationComponent|null
 	 */
-	protected function getComponent($component)
+	protected function getComponent(string $component): ?IApplicationComponent
 	{
-		if (!Yii::app() instanceof CWebApplication) {
+		$app = Yii::app();
+
+		if (!$app instanceof CWebApplication) {
 			return null;
 		}
 
-		if ($instance = Yii::app()->getComponent($component)) {
+		/** @var IApplicationComponent|null $instance */
+		$instance = $app->getComponent($component);
+
+		if ($instance !== null) {
 			return $instance;
 		}
 
@@ -196,19 +197,17 @@ class SentryComponent extends CApplicationComponent
 
 	/**
 	 * Register Raven Error Handlers for exceptions and errors.
-	 * @return bool
 	 */
-	protected function registerRavenErrorHandler()
+	protected function registerRavenErrorHandler(): bool
 	{
-		$raven = $this->getRaven();
-		if ($raven) {
-			ErrorHandler::registerOnceExceptionHandler();
-			ErrorHandler::registerOnceErrorHandler();
-			ErrorHandler::registerOnceFatalErrorHandler();
-
-			return true;
+		if (!isset($this->raven)) {
+			$this->registerRaven();
 		}
 
-		return false;
+		ErrorHandler::registerOnceExceptionHandler();
+		ErrorHandler::registerOnceErrorHandler();
+		ErrorHandler::registerOnceFatalErrorHandler();
+
+		return true;
 	}
 }

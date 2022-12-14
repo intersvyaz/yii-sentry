@@ -25,7 +25,10 @@ class SentryLogRouteTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;
 
-	public function severityLogLevelProvider()
+	/**
+	 * @return array<string, array{Severity, string}>
+	 */
+	public function severityLogLevelProvider(): array
 	{
 		$r = [];
 
@@ -48,7 +51,7 @@ class SentryLogRouteTest extends TestCase
 	 * @covers ::getSeverityFromLogLevel
 	 * @dataProvider severityLogLevelProvider
 	 */
-	public function testSeverityFromLogLevel($expect, $level): void
+	public function testSeverityFromLogLevel(Severity $expect, string $level): void
 	{
 		$this->assertEquals($expect, SentryLogRoute::getSeverityFromLogLevel($level));
 	}
@@ -103,7 +106,7 @@ class SentryLogRouteTest extends TestCase
 	 * @uses  \Skillshare\YiiSentry\SentryLogRoute::getSeverityFromLogLevel
 	 * @uses  \Skillshare\YiiSentry\SentryLogRoute::processLogs
 	 */
-	public function testGetRavenPreExisting()
+	public function testGetRavenPreExisting(): void
 	{
 		$raven = $this->getTestClientForLogs([['Test', Severity::info(), 'application']]);
 		$sut   = $this->createSentryLogRouteWithRaven($raven);
@@ -118,7 +121,7 @@ class SentryLogRouteTest extends TestCase
 	 * @uses  \Skillshare\YiiSentry\SentryLogRoute::getSeverityFromLogLevel
 	 * @uses  \Skillshare\YiiSentry\SentryLogRoute::processLogs
 	 */
-	public function testGetRavenFromNonExistentComponent()
+	public function testGetRavenFromNonExistentComponent(): void
 	{
 		$sut = new SentryLogRoute();
 
@@ -133,7 +136,7 @@ class SentryLogRouteTest extends TestCase
 	 * @uses  \Skillshare\YiiSentry\SentryLogRoute::getSeverityFromLogLevel
 	 * @uses  \Skillshare\YiiSentry\SentryLogRoute::processLogs
 	 */
-	public function testGetRavenFromPreExistentComponent()
+	public function testGetRavenFromPreExistentComponent(): void
 	{
 		$raven = $this->getTestClientForLogs([['Test', Severity::info(), 'application']]);
 
@@ -150,7 +153,7 @@ class SentryLogRouteTest extends TestCase
 		$sut->collectLogs($logger, true);
 	}
 
-	protected function createSentryLogRouteWithRaven($raven): SentryLogRoute
+	protected function createSentryLogRouteWithRaven(?ClientInterface $raven): SentryLogRoute
 	{
 		$sut = new SentryLogRoute();
 
@@ -160,6 +163,9 @@ class SentryLogRouteTest extends TestCase
 		return $sut;
 	}
 
+	/**
+	 * @param array<array{string, string, string}> $logs
+	 */
 	protected function getTestClientForLogs(array $logs): ClientInterface
 	{
 		/** @var TransportInterface&\Mockery\MockInterface $transport */
@@ -167,10 +173,13 @@ class SentryLogRouteTest extends TestCase
 		foreach ($logs as $log) {
 			[$message, $severity, $category] = $log;
 			$transport->shouldReceive('send')->withArgs(function (Event $event) use ($message, $severity, $category) {
+				$expectedSeverity = SentryLogRoute::getSeverityFromLogLevel($severity);
+				/** @var Severity $actualSeverity */
+				$actualSeverity = $event->getLevel();
 				self::assertEquals($message, $event->getMessage());
-				self::assertTrue($event->getLevel()->isEqualTo($severity), 'Log Level was not set correctly');
-				self::assertArrayHasKey('category', $event->getExtraContext(), 'Category should be set on event');
-				self::assertEquals($category, $event->getExtraContext()['category'], 'Category should be set correctly on event');
+				self::assertTrue($actualSeverity->isEqualTo($expectedSeverity), 'Log Level was not set correctly');
+				self::assertArrayHasKey('category', $event->getExtra(), 'Category should be set on event');
+				self::assertEquals($category, $event->getExtra()['category'], 'Category should be set correctly on event');
 				return true;
 			})->once();
 		}

@@ -11,9 +11,11 @@ use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use Sentry\Client;
 use Sentry\ClientInterface;
+use Sentry\Dsn;
 use Sentry\Event;
 use Sentry\SentrySdk;
 use Sentry\Severity;
+use Sentry\UserDataBag;
 use Skillshare\YiiSentry\SentryComponent;
 use Yii;
 
@@ -32,6 +34,7 @@ class SentryComponentTest extends TestCase
 		SentrySdk::init();
 
 		// Resets the app entirely between runs
+		/** @phpstan-ignore-next-line */
 		Yii::setApplication(null);
 		$config    = [
 			'basePath'   => dirname(__DIR__) . '/runtime',
@@ -85,7 +88,7 @@ class SentryComponentTest extends TestCase
 	 * @uses \Skillshare\YiiSentry\SentryComponent::getRaven
 	 * @uses \Skillshare\YiiSentry\SentryComponent::getUserContext
 	 */
-	public function testRegisterRaven()
+	public function testRegisterRaven(): void
 	{
 		$dsn       = 'http://tim:tam@bob.com/8675309';
 		$publicKey = 'tim';
@@ -112,7 +115,8 @@ class SentryComponentTest extends TestCase
 		$this->assertSame($release, $options->getRelease());
 		$this->assertSame($callback, $options->getBeforeSendCallback());
 
-		$dsnObj = $options->getDsn(false);
+		/** @var Dsn $dsnObj */
+		$dsnObj = $options->getDsn();
 		$this->assertSame($dsnHost, $dsnObj->getHost());
 		$this->assertSame($publicKey, $dsnObj->getPublicKey());
 		$this->assertSame($secretKey, $dsnObj->getSecretKey());
@@ -147,8 +151,15 @@ class SentryComponentTest extends TestCase
 			SentrySdk::getCurrentHub()->pushScope()
 		);
 		$scope            = SentrySdk::getCurrentHub()->pushScope();
-		$eventUserContext = $scope->applyToEvent(new Event(), [])->getUserContext()->toArray();
-		$this->assertEquals($userInfo, $eventUserContext, 'Scope should have received the user information');
+
+		/** @var Event $event */
+		$event = $scope->applyToEvent(Event::createEvent());
+
+		/** @var UserDataBag $eventUserContext */
+		$eventUserContext = $event->getUser();
+
+		$this->assertEquals($userInfo['id'], $eventUserContext->getId());
+		$this->assertEquals($userInfo['name'], $eventUserContext->getMetadata()['name'] ?? '');
 	}
 
 	/**
@@ -169,9 +180,12 @@ class SentryComponentTest extends TestCase
 		/** @var IApplicationComponent&\Mockery\MockInterface $user */
 		$user = \Mockery::mock(IApplicationComponent::class);
 		$user->shouldReceive('getIsInitialized')->andReturnTrue();
-		$user->isGuest = true;
 		$user->shouldReceive('getId')->andReturn($userId)->never();
 		$user->shouldReceive('getName')->andReturn($userName)->never();
+
+		/** @phpstan-ignore-next-line */
+		$user->isGuest = true;
+
 		$this->app->setComponent('user', $user);
 
 		$sut->getRaven()->captureMessage(
@@ -180,14 +194,18 @@ class SentryComponentTest extends TestCase
 			SentrySdk::getCurrentHub()->pushScope()
 		);
 		$scope            = SentrySdk::getCurrentHub()->pushScope();
-		$eventUserContext = $scope->applyToEvent(new Event(), [])->getUserContext()->toArray();
-		$this->assertEquals($userInfo, $eventUserContext, 'Scope should have received the user information');
+
+		/** @var Event $event */
+		$event = $scope->applyToEvent(Event::createEvent());
+
+		$eventUserContext = $event->getUser();
+		$this->assertNull($eventUserContext);
 	}
 
 	/**
 	 * @coversNothing
 	 */
-	public function testEverything()
+	public function testEverything(): void
 	{
 		$sut = new SentryComponent();
 		$sut->init();
@@ -208,7 +226,9 @@ class SentryComponentTest extends TestCase
 		$this->assertEquals('dev', $options->getEnvironment());
 		$this->assertEquals('dev_release', $options->getRelease());
 		$this->assertSame($callback, $options->getBeforeSendCallback());
-		$dsn = $options->getDsn(false);
+
+		/** @var Dsn $dsn */
+		$dsn = $options->getDsn();
 		$this->assertEquals(8675309, $dsn->getProjectId());
 		$this->assertEquals('tim', $dsn->getPublicKey());
 		$this->assertEquals('tam', $dsn->getSecretKey());
