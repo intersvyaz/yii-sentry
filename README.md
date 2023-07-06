@@ -23,10 +23,12 @@ main.php:
 'components' => [
     'sentry' => [
 		'class' => Skillshare\YiiSentry\SentryComponent::class,
-		'dsn' => 'https://X1:X2@host.com/2',
 		'useRavenJs' => true,
 		'ravenJsPlugins' => ['jquery'],
 		'enabled' => !YII_DEBUG,
+		'options' => [
+		    'dsn' => 'https://X1:X2@host.com/2',
+        ],
 	],
     ...
     'log' => [
