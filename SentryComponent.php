@@ -109,12 +109,12 @@ class SentryComponent extends CApplicationComponent
 		$jsPlugins = $plugins ?? $this->ravenJsPlugins;
 		$jsContext = $context ?? $this->getUserContext();
 
-		$assetUrl = $assetManager->publish(__DIR__ . '/assets');
+		$assetUrl = $assetManager->publish(__DIR__ . '/../../bower-asset/raven-js/dist');
 		$clientScript
-			->registerScriptFile($assetUrl . '/raven.min.js', CClientScript::POS_HEAD)
+			->registerScriptFile($assetUrl . '/raven.js', CClientScript::POS_HEAD)
 			->registerScript(
 				'raven-js1',
-				'Raven.config(\'' . $this->getJsDsn() . '\', ' . CJavaScript::encode($jsOptions) . ').install()',
+				'Raven.config(\'' . $this->getJsDsn() . '\', ' . CJavaScript::encode($jsOptions) . ').install();',
 				CClientScript::POS_BEGIN
 			);
 
